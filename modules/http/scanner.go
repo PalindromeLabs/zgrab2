@@ -68,7 +68,8 @@ type Flags struct {
 	CustomHeadersNames     string `long:"custom-headers-names" description:"CSV of custom HTTP headers to send to server"`
 	CustomHeadersValues    string `long:"custom-headers-values" description:"CSV of custom HTTP header values to send to server. Should match order of custom-headers-names."`
 	CustomHeadersDelimiter string `long:"custom-headers-delimiter" description:"Delimiter for customer header name/value CSVs"`
-
+	DynamicOrigin          bool `long:"dynamic-origin" description:"Dynamically set the Origin header to the endpoint's domain"`
+	
 	OverrideSH bool `long:"override-sig-hash" description:"Override the default SignatureAndHashes TLS option with more expansive default"`
 
 	// ComputeDecodedBodyHashAlgorithm enables computing the body hash later than the default,
@@ -144,6 +145,9 @@ func (scanner *Scanner) Protocol() string {
 	return "http"
 }
 
+// Global dynamic origin flag
+var UseDynamicOrigin = false
+
 // Init initializes the scanner with the given flags
 func (scanner *Scanner) Init(flags zgrab2.ScanFlags) error {
 	fl, _ := flags.(*Flags)
@@ -185,6 +189,9 @@ func (scanner *Scanner) Init(flags zgrab2.ScanFlags) error {
 		}
 		if len(headerNames) != len(headerValues) {
 			log.Panicf("inconsistent number of HTTP header names and values")
+		}
+		if fl.DynamicOrigin {
+			UseDynamicOrigin = true
 		}
 		scanner.customHeaders = make(map[string]string)
 		for i := 0; i < len(headerNames); i++ {
@@ -467,6 +474,10 @@ func (scan *scan) Grab() *zgrab2.ScanError {
 		request.Header.Set("Accept", "*/*")
 		for k, v := range scan.scanner.customHeaders {
 			request.Header.Set(k, v)
+		}
+		// set dynamic Origin header value
+		if UseDynamicOrigin {
+			request.Header.Set("Origin", "http://" + scan.target.Domain)
 		}
 	} else {
 		// If user did not specify custom headers, legacy behavior has always been
