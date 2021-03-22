@@ -47,7 +47,7 @@ type Flags struct {
 	zgrab2.BaseFlags
 	zgrab2.TLSFlags
 	Method       string `long:"method" default:"GET" description:"Set HTTP request method type"`
-	Endpoint     string `long:"endpoint" default:"/" description:"Send an HTTP request to an endpoint"`
+	Endpoint     string `long:"endpoint" default:"/" description:"This value isn't used in the Palindrome fork"`
 	UserAgent    string `long:"user-agent" default:"Mozilla/5.0 zgrab/0.x" description:"Set a custom user agent"`
 	RetryHTTPS   bool   `long:"retry-https" description:"If the initial request fails, reconnect and try with HTTPS."`
 	MaxSize      int    `long:"max-size" default:"256" description:"Max kilobytes to read in response to an HTTP request"`
@@ -423,9 +423,9 @@ func getHTTPURL(https bool, host string, port uint16, endpoint string) string {
 		proto = "http"
 	}
 	if protoToPort[proto] == port {
-		return proto + "://" + host + endpoint
+		return proto + "://" + host
 	}
-	return proto + "://" + net.JoinHostPort(host, strconv.FormatUint(uint64(port), 10)) + endpoint
+	return proto + "://" + net.JoinHostPort(host, strconv.FormatUint(uint64(port), 10))
 }
 
 // NewHTTPScan gets a new Scan instance for the given target
