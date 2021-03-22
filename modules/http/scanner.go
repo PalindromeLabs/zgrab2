@@ -69,6 +69,7 @@ type Flags struct {
 	CustomHeadersValues    string `long:"custom-headers-values" description:"CSV of custom HTTP header values to send to server. Should match order of custom-headers-names."`
 	CustomHeadersDelimiter string `long:"custom-headers-delimiter" description:"Delimiter for customer header name/value CSVs"`
 	DynamicOrigin          bool `long:"dynamic-origin" description:"Dynamically set the Origin header to the endpoint's domain"`
+	RemoveAcceptHeader     bool `long:"remove-accept-header" description:"Remove Accept header, which is normally added by default"`
 	
 	OverrideSH bool `long:"override-sig-hash" description:"Override the default SignatureAndHashes TLS option with more expansive default"`
 
@@ -145,8 +146,9 @@ func (scanner *Scanner) Protocol() string {
 	return "http"
 }
 
-// Global dynamic origin flag
-var UseDynamicOrigin = false
+// Global UseDynamicOrigin and NoAcceptHeader flags
+var UseDynamicOrigin bool
+var NoAcceptHeader bool
 
 // Init initializes the scanner with the given flags
 func (scanner *Scanner) Init(flags zgrab2.ScanFlags) error {
@@ -192,6 +194,9 @@ func (scanner *Scanner) Init(flags zgrab2.ScanFlags) error {
 		}
 		if fl.DynamicOrigin {
 			UseDynamicOrigin = true
+		}
+		if fl.RemoveAcceptHeader {
+			NoAcceptHeader = true
 		}
 		scanner.customHeaders = make(map[string]string)
 		for i := 0; i < len(headerNames); i++ {
@@ -439,7 +444,8 @@ func (scanner *Scanner) newHTTPScan(t *zgrab2.ScanTarget, useHTTPS bool) *scan {
 	}
 	ret.transport.DialTLS = ret.getTLSDialer(t)
 	ret.transport.DialContext = ret.dialContext
-	ret.client.UserAgent = scanner.config.UserAgent
+	//Palindrome custom edit: comment out user agent code - it's not wanted
+//	ret.client.UserAgent = scanner.config.UserAgent
 	ret.client.CheckRedirect = ret.getCheckRedirect()
 	ret.client.Transport = ret.transport
 	ret.client.Jar = nil // Don't send or receive cookies (otherwise use CookieJar)
@@ -478,6 +484,9 @@ func (scan *scan) Grab() *zgrab2.ScanError {
 		// set dynamic Origin header value
 		if UseDynamicOrigin {
 			request.Header.Set("Origin", "http://" + scan.target.Domain)
+		}
+		if NoAcceptHeader {
+			request.Header.Del("Accept")
 		}
 	} else {
 		// If user did not specify custom headers, legacy behavior has always been

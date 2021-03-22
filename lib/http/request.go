@@ -387,9 +387,10 @@ func (r *Request) protoAtLeastOutgoing(major, minor int) bool {
 }
 
 // UserAgent returns the client's User-Agent, if sent in the request.
-func (r *Request) UserAgent() string {
+//Palindrome custom edit: comment out user agent code - it's not wanted
+/* func (r *Request) UserAgent() string {
 	return r.Header.Get("User-Agent")
-}
+} */
 
 // Cookies parses and returns the HTTP cookies sent with the request.
 func (r *Request) Cookies() []*Cookie {
@@ -586,7 +587,8 @@ func (req *Request) write(w io.Writer, usingProxy bool, extraHeaders Header, wai
 
 	// Use the defaultUserAgent unless the Header contains one, which
 	// may be blank to not send the header.
-	userAgent := defaultUserAgent
+//Palindrome custom edit: comment out user agent code - it's not wanted
+/*	userAgent := defaultUserAgent
 	if _, ok := req.Header["User-Agent"]; ok {
 		userAgent = req.Header.Get("User-Agent")
 	}
@@ -595,7 +597,7 @@ func (req *Request) write(w io.Writer, usingProxy bool, extraHeaders Header, wai
 		if err != nil {
 			return err
 		}
-	}
+	} */
 
 	// Process Body,ContentLength,Close,Trailer
 	tw, err := newTransferWriter(req)

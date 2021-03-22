@@ -1,7 +1,8 @@
 ZGrab 2.0
 =========
 
-This repo contains the new ZGrab framework, and will eventually replace https://github.com/zmap/zgrab.
+This repo contains a ZGrab2 fork from Palindrome technologies. This fork modifies some HTTP functionality. Specifically, it includes some PRs not accepted in the main branch at the time of writing, and includes some modifications to remove headers that ZGrab2 adds by default.
+This fork also allows for a dynamic Origin header to be added to HTTP requests. Use `zgrab2 http -h` to see the additional flags that can be used.
 
 ## Building
 
@@ -10,13 +11,13 @@ You will need to have a valid `$GOPATH` set up, for more information about `$GOP
 Once you have a working `$GOPATH`, run:
 
 ```
-$ go get github.com/zmap/zgrab2
+$ go get github.com/PalindromeLabs/zgrab2
 ```
 
-This will install zgrab under `$GOPATH/src/github.com/zmap/zgrab2`
+This will install zgrab under `$GOPATH/src/github.com/PalindromeLabs/zgrab2`
 
 ```
-$ cd $GOPATH/src/github.com/zmap/zgrab2
+$ cd $GOPATH/src/github.com/PalindromeLabs/zgrab2
 $ make
 ```
 

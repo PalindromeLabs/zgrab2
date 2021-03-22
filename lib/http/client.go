@@ -500,7 +500,8 @@ func (c *Client) Do(req *Request) (resp *Response, err error) {
 	}
 
 	if u := req.Header.Get("User-Agent"); u == "" {
-		req.Header.Set("User-Agent", c.UserAgent)
+//	Custom Palindrome modification: don't set default user agent if user agent value is empty
+//		req.Header.Set("User-Agent", c.UserAgent)
 	}
 
 	if req.URL == nil {

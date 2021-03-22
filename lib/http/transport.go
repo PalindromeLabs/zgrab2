@@ -1866,7 +1866,8 @@ func (pc *persistConn) roundTrip(req *transportRequest) (resp *Response, err err
 		// auto-decoding a portion of a gzipped document will just fail
 		// anyway. See https://golang.org/issue/8923
 		requestedGzip = true
-		req.extraHeaders().Set("Accept-Encoding", "gzip")
+		//Palindrome custom edit: comment out Accept-Encoding - it's not wanted
+//		req.extraHeaders().Set("Accept-Encoding", "gzip")
 	}
 
 	var continueCh chan struct{}
