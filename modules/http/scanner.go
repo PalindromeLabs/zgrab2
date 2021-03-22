@@ -483,7 +483,11 @@ func (scan *scan) Grab() *zgrab2.ScanError {
 		}
 		// set dynamic Origin header value
 		if UseDynamicOrigin {
-			request.Header.Set("Origin", "http://" + scan.target.Domain)
+			u, err := url.Parse("http://" + scan.target.Domain)
+			if err != nil {
+				panic(err)
+			}
+			request.Header.Set("Origin", "http://" + u.Host)
 		}
 		if NoAcceptHeader {
 			request.Header.Del("Accept")
