@@ -318,16 +318,31 @@ func (scan *scan) dialContext(ctx context.Context, network string, addr string) 
 
 // getTLSDialer returns a Dial function that connects using the
 // zgrab2.GetTLSConnection()
-func (scan *scan) getTLSDialer(t *zgrab2.ScanTarget) func(net, addr string) (net.Conn, error) {
-	return func(net, addr string) (net.Conn, error) {
-		outer, err := scan.dialContext(context.Background(), net, addr)
+func (scan *scan) getTLSDialer(t *zgrab2.ScanTarget) func(network, addr string) (net.Conn, error) {
+	return func(network, addr string) (net.Conn, error) {
+		outer, err := scan.dialContext(context.Background(), network, addr)
+		if err != nil {
+			return nil, err
+		}
+		cfg, err := scan.scanner.config.TLSFlags.GetTLSConfigForTarget(t)
 		if err != nil {
 			return nil, err
 		}
 
-		cfg, err := scan.scanner.config.TLSFlags.GetTLSConfigForTarget(t)
-		if err != nil {
-			return nil, err
+		// Set SNI server name on redirects unless --server-name was used (issue #300)
+		//  - t.Domain is always set to the *original* Host so it's not useful for setting SNI
+		//  - host is the current target of the request in this context; this is true for the
+		//    initial request as well as subsequent requests caused by redirects
+		//  - scan.scanner.config.ServerName is the value from --server-name if one was specified
+
+		// If SNI is enabled and --server-name is not set, use the target host for the SNI server name
+		if !scan.scanner.config.NoSNI && scan.scanner.config.ServerName == "" {
+			host, _, err := net.SplitHostPort(addr)
+			if err != nil {
+				log.Errorf("http/scanner.go getTLSDialer: unable to split host:port '%s'", addr)
+				log.Errorf("Something went wrong splitting host/port: %s", err)
+			}
+			cfg.ServerName = host
 		}
 
 		if scan.scanner.config.OverrideSH {
@@ -341,7 +356,6 @@ func (scan *scan) getTLSDialer(t *zgrab2.ScanTarget) func(net, addr string) (net
 				{0x01, 0x06}, // rsa, sha512
 			}
 		}
-
 		tlsConn := scan.scanner.config.TLSFlags.GetWrappedConnection(outer, cfg)
 
 		// lib/http/transport.go fills in the TLSLog in the http.Request instance(s)
@@ -534,7 +548,7 @@ func (scan *scan) Grab() *zgrab2.ScanError {
 	bodyText := ""
 	decodedSuccessfully := false
 	decoder := encoder.NewDecoder()
-	
+
 	//"windows-1252" is the default value and will likely not decode correctly
 	if certain || encoding != "windows-1252" {
 		decoded, decErr := decoder.Bytes(buf.Bytes())
